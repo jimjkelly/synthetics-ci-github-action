@@ -2,6 +2,8 @@ import * as core from '@actions/core'
 import {getReporter, resolveConfig} from './resolve-config'
 import {synthetics} from '@datadog/datadog-ci'
 
+import { generateOutputs } from './utils'
+
 const run = async (): Promise<void> => {
   synthetics.utils.setCiTriggerApp('github_action')
 
@@ -30,6 +32,8 @@ const run = async (): Promise<void> => {
     } else {
       core.info(`\n\nDatadog Synthetics tests succeeded: ${printSummary(summary, config)}`)
     }
+
+    generateOutputs({results, summary, config})
   } catch (error) {
     synthetics.utils.reportExitLogs(reporter, config, {error})
 

@@ -48,6 +48,27 @@ inputs:
   fail_on_timeout:
     required: false
     description: 'Fail the CI job if at least one test exceeds the default test timeout.'
+outputs:
+  result:
+    description: 'The overall result of your test runs.'
+  resultsUrl:
+    description: 'The url at which you can see your results.'
+  criticalErrors:
+    description: 'The count of tests which resulted in a critical error.'
+  passed:
+    description: 'The count of tests which resulted in a pass.'
+  failedNonBlocking:
+    description: 'The count of tests which failed, but are non-blocking.'
+  failed:
+    description: 'The count of tests which failed.'
+  notFound:
+    description: 'the count of tests which were not found.'
+  skipped:
+    description: 'The count of tests which were skipped.'
+  timedOut:
+    description: 'The count of tests which timed out.'
+  testRuns:
+    description: 'A JSON array of objects with the following keys: id, detailsUrl, device, duration, location, name, result, and tags, which is itself an array of strings.'
 
 runs:
   using: 'node16'

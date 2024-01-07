@@ -248,6 +248,100 @@ describe('Run Github Action', () => {
     })
   })
 
+  describe('Publish Github Actions outputs', () => {
+    beforeEach(() => {
+      // getOrgSettings() makes a network call, mocking it for easier testing.
+      jest.spyOn(synthetics.utils, 'getOrgSettings').mockImplementation()
+      // renderResults() does side effects on the summary: mocking it for easier testing.
+      jest.spyOn(synthetics.utils, 'renderResults').mockImplementation()
+    })
+
+    test('Github Action with all passing results', async () => {
+      const setOutputMock = jest.spyOn(core, 'setOutput')
+
+      jest.spyOn(synthetics, 'executeTests').mockResolvedValue({
+        results: [
+          {
+            resultId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            location: 'abcdefg',
+            passed: true,
+            test: {
+              name: 'aaa-bbb-ccc',
+              tags: ['foo', 'bar'],
+            }
+          } as synthetics.Result
+        ],
+        summary: {...EMPTY_SUMMARY, passed: 1},
+      })
+
+      await run()
+      expect(setOutputMock.mock.calls).toEqual([
+        ['result', true],
+        ['url', 'https://app.datadoghq.com/synthetics/explorer/ci?batchResultId=aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'],
+        ['criticalErrors', 0],
+        ['passed', 1],
+        ['failedNonBlocking', 0],
+        ['failed', 0],
+        ['timedOut', 0],
+        ['skipped', 0],
+        ['notFound', 0],
+        ['testRuns', '[{"id":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","name":"aaa-bbb-ccc","tags":["foo","bar"],"passed":true,"location":"abcdefg"}]'],
+      ])
+    })
+
+    test('Github Action with some failing results', async () => {
+      const setOutputMock = jest.spyOn(core, 'setOutput')
+
+      jest.spyOn(synthetics, 'executeTests').mockResolvedValue({
+        results: [
+          {
+            resultId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            location: 'abcdefg',
+            passed: true,
+            test: {
+              name: 'aaa-bbb-ccc',
+              tags: ['foo', 'bar'],
+            }
+          } as synthetics.Result,
+          {
+            resultId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+            location: 'abcdefg',
+            passed: false,
+            test: {
+              name: 'aaa-bbb-ccc',
+              tags: ['foo', 'bar'],
+            }
+          } as synthetics.Result
+        ],
+        summary: {
+          criticalErrors: 1,
+          passed: 2,
+          failed: 3,
+          failedNonBlocking: 4,
+          skipped: 5,
+          testsNotFound: new Set(['unk-now-nid']),
+          timedOut: 6,
+          batchId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+        },
+      })
+
+      await run()
+      expect(setOutputMock.mock.calls).toEqual([
+        ['result', false],
+        ['url', 'https://app.datadoghq.com/synthetics/explorer/ci?batchResultId=aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'],
+        ['criticalErrors', 1],
+        ['passed', 2],
+        ['failedNonBlocking', 4],
+        ['failed', 3],
+        ['timedOut', 6],
+        ['skipped', 5],
+        ['notFound', 1],
+        ['testRuns', '[{"id":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","name":"aaa-bbb-ccc","tags":["foo","bar"],"passed":true,"location":"abcdefg"},{"id":"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb","name":"aaa-bbb-ccc","tags":["foo","bar"],"passed":false,"location":"abcdefg"}]'],
+      ])
+    })
+
+  })
+
   describe('Github Action execution', () => {
     test('Github Action runs from js file', async () => {
       const nodePath = process.execPath
