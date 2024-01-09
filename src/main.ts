@@ -30,7 +30,7 @@ const run = async (): Promise<void> => {
     if (exitReason !== 'passed') {
       core.setFailed(`Datadog Synthetics tests failed: ${printSummary(summary, config)}`)
     } else {
-      core.info(`\n\nDatadog Synthetics tests succeeded: ${printSummary(summary, config)}`)
+      core.info(`\n\nDatadog Synthetics tests succeeded: ${printSummary(summary, config)} ohai`)
     }
 
     generateOutputs({results, summary, config})
